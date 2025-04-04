@@ -22,7 +22,7 @@
 
         .mobile-container {
             width: 375px;
-            height: 667px;
+            height: 750px; /* Aumentado el largo */
             background-color: white;
             border-radius: 30px;
             overflow: hidden;
@@ -495,6 +495,11 @@
                     <span id="generated-code"></span>
                 </div>
             </div>
+            <h2 style="margin-top: 30px; margin-bottom: 20px;">Vincular Dispositivo por Código</h2>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <input type="text" id="manual-code-input" placeholder="Ingrese el código">
+            </div>
+            <button class="add-device-btn" id="enter-link-code">Ingresar Código</button>
             <h2 style="margin-top: 30px; margin-bottom: 20px;">Dispositivos Vinculados</h2>
             <div class="device-list" id="device-list">
                 <div class="device-item">
@@ -516,7 +521,6 @@
                     </div>
                 </div>
             </div>
-            <button class="add-device-btn" id="add-device-btn">Añadir Dispositivo Manualmente</button>
         </div>
 
         <div id="safe-zone-screen" class="screen">
@@ -621,6 +625,8 @@
             const linkingStatusDiv = document.getElementById('linking-status');
             const linkCodeDisplayDiv = document.getElementById('link-code-display');
             const generatedCodeSpan = document.getElementById('generated-code');
+            const enterLinkCodeBtn = document.getElementById('enter-link-code');
+            const manualCodeInput = document.getElementById('manual-code-input');
 
             // Ocultar mensaje de error de zona inicialmente
             zoneError.style.display = 'none';
@@ -667,6 +673,7 @@
                     // Ocultar código y estado al entrar a la pantalla
                     linkingStatusDiv.style.display = 'none';
                     linkCodeDisplayDiv.style.display = 'none';
+                    manualCodeInput.value = ''; // Limpiar el campo de código manual
                 } else if (screenId === 'safe-zone-screen') {
                     headerTitle.textContent = 'Crear Zona Segura';
                     backBtn.style.display = 'block';
@@ -894,7 +901,7 @@
                 });
             }
 
-            // Funcionalidad para añadir dispositivo
+            // Funcionalidad para añadir dispositivo (modal)
             function openAddDeviceModal() {
                 addDeviceModal.style.display = 'flex';
             }
@@ -909,72 +916,85 @@
             closeModal.addEventListener('click', closeAddDeviceModal);
             cancelDevice.addEventListener('click', closeAddDeviceModal);
 
-            confirmDevice.addEventListener('click', function() {
-                const deviceName = document.getElementById('device-name').value;
-                const deviceType = document.getElementById('device-type').value;
+confirmDevice.addEventListener('click', function() {
+    const deviceName = document.getElementById('device-name').value;
+    const deviceType = document.getElementById('device-type').value;
 
-                if (!deviceName || !deviceType) {
-                    alert('Por favor, completa todos los campos.');
-                    return;
-                }
+    if (!deviceName || !deviceType) {
+        alert('Por favor, completa todos los campos.');
+        return;
+    }
 
-                // Crear nuevo elemento de dispositivo
-                const newDevice = document.createElement('div');
-                newDevice.className = 'device-item';
+    // Crear nuevo elemento de dispositivo
+    const newDevice = document.createElement('div');
+    newDevice.className = 'device-item';
 
-                let iconClass = 'fa-mobile-alt';
-                if (deviceType === 'tablet') iconClass = 'fa-tablet-alt';
-              
-                if (deviceType === 'watch') iconClass = 'fa-clock';
-                if (deviceType === 'other') iconClass = 'fa-laptop';
+    let iconClass = 'fa-mobile-alt';
+    if (deviceType === 'tablet') iconClass = 'fa-tablet-alt';
+    if (deviceType === 'watch') iconClass = 'fa-clock';
+    if (deviceType === 'other') iconClass = 'fa-laptop';
 
-                newDevice.innerHTML = `
-                    <div class="device-icon">
-                        <i class="fas ${iconClass}"></i>
-                    </div>
-                    <div class="device-info">
-                        <div class="device-name">${deviceName}</div>
-                        <div class="device-status">Conectando...</div>
-                    </div>
-                `;
+    newDevice.innerHTML = `
+        <div class="device-icon">
+            <i class="fas ${iconClass}"></i>
+        </div>
+        <div class="device-info">
+            <div class="device-name">${deviceName}</div>
+            <div class="device-status">Conectando...</div>
+        </div>
+    `;
 
-                // Añadir a la lista
-                deviceList.appendChild(newDevice);
+    // Añadir a la lista
+    deviceList.appendChild(newDevice);
 
-                // Cerrar el modal
-                closeAddDeviceModal();
+    // Cerrar el modal
+    closeAddDeviceModal();
 
-                // Simular conexión después de 2 segundos
-                setTimeout(() => {
-                    const statusElement = newDevice.querySelector('.device-status');
-                    statusElement.textContent = 'Conectado';
-                    statusElement.style.color = '#4caf50';
-                }, 2000);
-            });
+    // Simular conexión después de 2 segundos
+    setTimeout(() => {
+        const statusElement = newDevice.querySelector('.device-status');
+        statusElement.textContent = 'Conectado';
+        statusElement.style.color = '#4caf50';
+    }, 2000);
+});
 
-            // Event Listener para el botón "Generar Código"
-            generateLinkCodeBtn.addEventListener('click', function() {
-                // Mostrar el estado de carga
-                linkingStatusDiv.style.display = 'block';
-                linkCodeDisplayDiv.style.display = 'none';
+// Event Listener para el botón "Generar Código"
+generateLinkCodeBtn.addEventListener('click', function() {
+    // Mostrar el estado de carga
+    linkingStatusDiv.style.display = 'block';
+    linkCodeDisplayDiv.style.display = 'none';
 
-                // Generar código aleatorio (ejemplo de 6 dígitos)
-                const code = Math.floor(100000 + Math.random() * 900000);
-                console.log("Código generado:", code); // Para depuración
+    // Generar código aleatorio (ejemplo de 6 dígitos)
+    const code = Math.floor(100000 + Math.random() * 900000);
+    console.log("Código generado:", code); // Para depuración
 
-                // Esperar 5 segundos
-                setTimeout(function() {
-                    // Ocultar el estado de carga
-                    linkingStatusDiv.style.display = 'none';
-                    // Mostrar el código generado
-                    generatedCodeSpan.textContent = code;
-                    linkCodeDisplayDiv.style.display = 'block';
-                }, 5000);
-            });
+    // Esperar 5 segundos
+    setTimeout(function() {
+        // Ocultar el estado de carga
+        linkingStatusDiv.style.display = 'none';
+        // Mostrar el código generado
+        generatedCodeSpan.textContent = code;
+        linkCodeDisplayDiv.style.display = 'block';
+    }, 5000);
+});
 
-            // Inicialización
-            showScreen('main-menu');
-        });
-    </script>
+// Event Listener para el botón "Ingresar Código"
+enterLinkCodeBtn.addEventListener('click', function() {
+    const enteredCode = manualCodeInput.value;
+    if (enteredCode) {
+        console.log("Código ingresado:", enteredCode);
+        // Aquí podrías agregar la lógica para verificar el código
+        // y vincular el dispositivo. Por ahora, mostraremos un mensaje.
+        alert(`Se intentó vincular con el código: ${enteredCode}`);
+        manualCodeInput.value = ''; // Limpiar el campo después de intentar
+    } else {
+        alert("Por favor, ingrese un código.");
+    }
+});
+
+// Inicialización
+showScreen('main-menu');
+});
+</script>
 </body>
 </html>
