@@ -760,12 +760,12 @@
                     zoneError.style.display = 'block';
                 } else {
                     // Guardar zona segura
-                    saveZone(zoneName, radius);
+                    const newZone = saveZone(zoneName, radius);
 
                     // Crear y mostrar el modal de confirmación personalizado
                     showConfirmationModal(
                         'Zona Segura Guardada',
-                        `Tu zona segura "${zoneName}" ha sido guardada con éxito con un radio de ${radius} metros.`,
+                        `Tu zona segura "${newZone.name}" ha sido guardada con éxito con un radio de ${newZone.radius} metros.`,
                         'Volver al menú',
                         'Ver mis zonas',
                         function() {
@@ -915,7 +915,6 @@
             addDeviceBtn.addEventListener('click', openAddDeviceModal);
             closeModal.addEventListener('click', closeAddDeviceModal);
             cancelDevice.addEventListener('click', closeAddDeviceModal);
-            
 
 confirmDevice.addEventListener('click', function() {
     const deviceName = document.getElementById('device-name').value;
@@ -959,26 +958,6 @@ confirmDevice.addEventListener('click', function() {
     }, 2000);
 });
 
-// Event Listener para el botón "Generar Código"
-generateLinkCodeBtn.addEventListener('click', function() {
-    // Mostrar el estado de carga
-    linkingStatusDiv.style.display = 'block';
-    linkCodeDisplayDiv.style.display = 'none';
-
-    // Generar código aleatorio (ejemplo de 6 dígitos)
-    const code = Math.floor(100000 + Math.random() * 900000);
-    console.log("Código generado:", code); // Para depuración
-
-    // Esperar 5 segundos
-    setTimeout(function() {
-        // Ocultar el estado de carga
-        linkingStatusDiv.style.display = 'none';
-        // Mostrar el código generado
-        generatedCodeSpan.textContent = code;
-        linkCodeDisplayDiv.style.display = 'block';
-    }, 5000);
-});
-
 // Event Listener para el botón "Ingresar Código"
 enterLinkCodeBtn.addEventListener('click', function() {
     const enteredCode = manualCodeInput.value;
@@ -1002,6 +981,26 @@ enterLinkCodeBtn.addEventListener('click', function() {
     } else {
         alert("Por favor, ingrese un código.");
     }
+});
+
+// Event Listener para el botón "Generar Código"
+generateLinkCodeBtn.addEventListener('click', function() {
+    // Mostrar el estado de carga
+    linkingStatusDiv.style.display = 'block';
+    linkCodeDisplayDiv.style.display = 'none';
+
+    // Generar código aleatorio (ejemplo de 6 dígitos)
+    const code = Math.floor(100000 + Math.random() * 900000);
+    console.log("Código generado:", code); // Para depuración
+
+    // Esperar 5 segundos
+    setTimeout(function() {
+        // Ocultar el estado de carga
+        linkingStatusDiv.style.display = 'none';
+        // Mostrar el código generado
+        generatedCodeSpan.textContent = code;
+        linkCodeDisplayDiv.style.display = 'block';
+    }, 5000);
 });
 
 // Función para añadir un dispositivo a la lista visualmente
