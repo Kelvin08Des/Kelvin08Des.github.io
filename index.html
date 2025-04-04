@@ -377,6 +377,18 @@
             animation: fadeInScale 0.5s ease-out;
         }
 
+        .error-icon {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
         .zones-list {
             margin-top: 20px;
         }
@@ -782,7 +794,10 @@
                         'Código Incorrecto',
                         'El código ingresado no es válido.',
                         'Aceptar',
-                        null
+                        null,
+                        null,
+                        null,
+                        true
                     );
                 }
             }
@@ -835,7 +850,7 @@
                 modal.addEventListener('click', (e) => e.target === modal && closeModal());
             }
 
-            function showConfirmationModal(title, message, primaryBtnText, secondaryBtnText, primaryAction, secondaryAction) {
+            function showConfirmationModal(title, message, primaryBtnText, secondaryBtnText, primaryAction, secondaryAction, isError = false) {
                 const modal = document.createElement('div');
                 modal.className = 'modal';
                 modal.style.display = 'flex';
@@ -847,7 +862,10 @@
                         </div>
                         <div class="modal-body">
                             <div style="text-align: center; margin: 15px 0;">
-                                <i class="fas fa-check-circle success-icon" style="color: #4CAF50; font-size: 48px; margin-bottom: 15px;"></i>
+                                <i class="fas ${isError ? 'fa-times-circle error-icon' : 'fa-check-circle success-icon'}" 
+                                   style="color: ${isError ? '#e53935' : '#4CAF50'}; 
+                                   font-size: 48px; 
+                                   margin-bottom: 15px;"></i>
                                 <p>${message}</p>
                             </div>
                         </div>
