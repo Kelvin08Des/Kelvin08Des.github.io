@@ -430,6 +430,17 @@
             border-radius: 8px;
             display: inline-block;
         }
+          /* Todos los estilos anteriores se mantienen */
+          .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 20px;
+        }
+
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -581,47 +592,73 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Configuraciones y variables globales
             const adminUser = "admin";
             const adminPass = "admin";
             const MIN_RADIUS = 50;
-
+            let generatedCode = null;
+    
             // Elementos DOM
-            const backBtn = document.querySelector('.back-btn');
-            const screens = document.querySelectorAll('.screen');
-            const navItems = document.querySelectorAll('.nav-item');
-            const menuOptions = document.querySelectorAll('.menu-option');
-            const loginBtn = document.getElementById('login-btn');
-            const radiusInput = document.getElementById('radius-input');
-            const radiusValue = document.getElementById('radius-value');
-            const radiusCircle = document.getElementById('radius-circle');
-            const saveZoneBtn = document.getElementById('save-zone-btn');
-            const zoneError = document.getElementById('zone-error');
-            const deviceList = document.getElementById('device-list');
-            const zonesList = document.getElementById('zones-list');
-            const generateLinkCodeBtn = document.getElementById('generate-link-code');
-            const linkingStatusDiv = document.getElementById('linking-status');
-            const linkCodeDisplayDiv = document.getElementById('link-code-display');
-            const generatedCodeSpan = document.getElementById('generated-code');
-            const enterLinkCodeBtn = document.getElementById('enter-link-code');
-            const manualCodeInput = document.getElementById('manual-code-input');
-
+            const elements = {
+                backBtn: document.querySelector('.back-btn'),
+                screens: document.querySelectorAll('.screen'),
+                navItems: document.querySelectorAll('.nav-item'),
+                menuOptions: document.querySelectorAll('.menu-option'),
+                loginBtn: document.getElementById('login-btn'),
+                radiusInput: document.getElementById('radius-input'),
+                radiusValue: document.getElementById('radius-value'),
+                radiusCircle: document.getElementById('radius-circle'),
+                saveZoneBtn: document.getElementById('save-zone-btn'),
+                zoneError: document.getElementById('zone-error'),
+                deviceList: document.getElementById('device-list'),
+                zonesList: document.getElementById('zones-list'),
+                generateLinkCodeBtn: document.getElementById('generate-link-code'),
+                enterLinkCodeBtn: document.getElementById('enter-link-code'),
+                manualCodeInput: document.getElementById('manual-code-input')
+            };
+    
             // Inicialización
-            zoneError.style.display = 'none';
-            loadDevices();
-            loadSavedZones();
-
+            initializeApp();
+    
+            function initializeApp() {
+                elements.zoneError.style.display = 'none';
+                loadDevices();
+                loadSavedZones();
+                setupEventListeners();
+            }
+    
+            function setupEventListeners() {
+                // Navegación
+                elements.menuOptions.forEach(option => {
+                    option.addEventListener('click', () => handleMenuOption(option.id));
+                });
+                
+                elements.backBtn.addEventListener('click', () => showScreen('main-menu'));
+                elements.navItems.forEach(item => {
+                    item.addEventListener('click', () => showScreen(item.dataset.screen));
+                });
+    
+                // Login
+                elements.loginBtn.addEventListener('click', handleLogin);
+    
+                // Zonas seguras
+                elements.radiusInput.addEventListener('input', handleRadiusChange);
+                elements.saveZoneBtn.addEventListener('click', handleSaveZone);
+    
+                // Dispositivos
+                elements.generateLinkCodeBtn.addEventListener('click', handleGenerateCode);
+                elements.enterLinkCodeBtn.addEventListener('click', handleEnterCode);
+            }
+    
+            // Funciones de navegación
             function showScreen(screenId) {
-                screens.forEach(screen => screen.classList.remove('active'));
+                elements.screens.forEach(screen => screen.classList.remove('active'));
                 document.getElementById(screenId).classList.add('active');
                 updateHeader(screenId);
-                navItems.forEach(item => {
-                    item.classList.toggle('active', item.dataset.screen === screenId);
-                });
-                if (screenId === 'saved-zones-screen') loadSavedZones();
+                updateNavItems(screenId);
             }
-
+    
             function updateHeader(screenId) {
-                const headerTitle = document.querySelector('.header-title');
                 const titles = {
                     'main-menu': 'VitorApp',
                     'login-screen': 'Inicio de Sesión',
@@ -629,31 +666,32 @@
                     'safe-zone-screen': 'Crear Zona Segura',
                     'saved-zones-screen': 'Mis Zonas Seguras'
                 };
-                headerTitle.textContent = titles[screenId];
-                backBtn.style.display = screenId === 'main-menu' ? 'none' : 'block';
+                document.querySelector('.header-title').textContent = titles[screenId];
+                elements.backBtn.style.display = screenId === 'main-menu' ? 'none' : 'block';
             }
-
-            // Event Listeners
-            menuOptions.forEach(option => {
-                option.addEventListener('click', () => {
-                    const screensMap = {
-                        'login-option': 'login-screen',
-                        'device-option': 'device-screen',
-                        'safe-zone-option': 'safe-zone-screen',
-                        'saved-zones-option': 'saved-zones-screen'
-                    };
-                    showScreen(screensMap[option.id]);
+    
+            function updateNavItems(activeScreen) {
+                elements.navItems.forEach(item => {
+                    item.classList.toggle('active', item.dataset.screen === activeScreen);
                 });
-            });
-
-            backBtn.addEventListener('click', () => showScreen('main-menu'));
-            navItems.forEach(item => item.addEventListener('click', () => showScreen(item.dataset.screen)));
-
-            loginBtn.addEventListener('click', () => {
+            }
+    
+            function handleMenuOption(optionId) {
+                const screenMap = {
+                    'login-option': 'login-screen',
+                    'device-option': 'device-screen',
+                    'safe-zone-option': 'safe-zone-screen',
+                    'saved-zones-option': 'saved-zones-screen'
+                };
+                showScreen(screenMap[optionId]);
+            }
+    
+            // Funciones de login
+            function handleLogin() {
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
                 const errorMsg = document.getElementById('login-error');
-
+    
                 if (username === adminUser && password === adminPass) {
                     showConfirmationModal(
                         'Inicio de Sesión Exitoso',
@@ -670,21 +708,22 @@
                 } else {
                     errorMsg.style.display = 'block';
                 }
-            });
-
-            radiusInput.addEventListener('input', function() {
-                const value = this.value;
-                radiusValue.textContent = value;
-                zoneError.style.display = parseInt(value) >= MIN_RADIUS ? 'none' : 'block';
+            }
+    
+            // Funciones de zonas seguras
+            function handleRadiusChange() {
+                const value = elements.radiusInput.value;
+                elements.radiusValue.textContent = value;
+                elements.zoneError.style.display = parseInt(value) >= MIN_RADIUS ? 'none' : 'block';
                 const size = value * 0.8;
-                radiusCircle.style.width = size + 'px';
-                radiusCircle.style.height = size + 'px';
-            });
-
-            saveZoneBtn.addEventListener('click', function() {
-                const radius = parseInt(radiusInput.value);
+                elements.radiusCircle.style.width = size + 'px';
+                elements.radiusCircle.style.height = size + 'px';
+            }
+    
+            function handleSaveZone() {
+                const radius = parseInt(elements.radiusInput.value);
                 if (radius < MIN_RADIUS) {
-                    zoneError.style.display = 'block';
+                    elements.zoneError.style.display = 'block';
                     return;
                 }
                 
@@ -699,17 +738,104 @@
                     () => resetZoneForm('main-menu'),
                     () => resetZoneForm('saved-zones-screen')
                 );
-            });
-
+            }
+    
             function resetZoneForm(screen) {
                 document.getElementById('zone-name').value = '';
-                radiusInput.value = 50;
-                radiusValue.textContent = 50;
-                radiusCircle.style.width = '40px';
-                radiusCircle.style.height = '40px';
+                elements.radiusInput.value = 50;
+                elements.radiusValue.textContent = 50;
+                elements.radiusCircle.style.width = '40px';
+                elements.radiusCircle.style.height = '40px';
                 showScreen(screen);
             }
-
+    
+            // Funciones de dispositivos
+            function handleGenerateCode() {
+                const loadingModal = showLoadingModal();
+                
+                setTimeout(() => {
+                    generatedCode = "123456";
+                    document.body.removeChild(loadingModal);
+                    showCodeModal(generatedCode);
+                }, 5000);
+            }
+    
+            function handleEnterCode() {
+                const enteredCode = elements.manualCodeInput.value;
+                
+                if (enteredCode === generatedCode) {
+                    showConfirmationModal(
+                        'Dispositivo Vinculado',
+                        'El dispositivo se ha vinculado exitosamente.',
+                        'Aceptar',
+                        null,
+                        () => {
+                            elements.manualCodeInput.value = '';
+                            generatedCode = null;
+                            loadDevices();
+                        }
+                    );
+                } else {
+                    showConfirmationModal(
+                        'Código Incorrecto',
+                        'El código ingresado no es válido.',
+                        'Aceptar',
+                        null
+                    );
+                }
+            }
+    
+            function showLoadingModal() {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.display = 'flex';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <div style="text-align: center; padding: 30px;">
+                                <div class="loading-spinner"></div>
+                                <p>Generando código de vinculación...</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                return modal;
+            }
+    
+            function showCodeModal(code) {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.display = 'flex';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="modal-title">Código Generado</div>
+                            <button class="close-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="text-align: center; margin: 20px 0;">
+                                <div id="generated-code" style="font-size: 32px; letter-spacing: 5px; margin: 20px 0; color: #4285f4;">
+                                    ${code}
+                                </div>
+                                <p>Ingrese este código en el dispositivo del tutor</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-btn modal-btn-primary" id="close-code-modal">Cerrar</button>
+                        </div>
+                    </div>
+                `;
+    
+                document.body.appendChild(modal);
+                
+                const closeModal = () => document.body.removeChild(modal);
+                modal.querySelector('.close-modal').addEventListener('click', closeModal);
+                modal.querySelector('#close-code-modal').addEventListener('click', closeModal);
+                modal.addEventListener('click', (e) => e.target === modal && closeModal());
+            }
+    
+            // Funciones generales
             function showConfirmationModal(title, message, primaryBtnText, secondaryBtnText, primaryAction, secondaryAction) {
                 const modal = document.createElement('div');
                 modal.className = 'modal';
@@ -732,27 +858,28 @@
                         </div>
                     </div>
                 `;
-
+    
                 document.body.appendChild(modal);
-
+    
                 modal.querySelector('.close-modal').addEventListener('click', () => document.body.removeChild(modal));
                 modal.querySelector('#primary-action').addEventListener('click', () => {
                     document.body.removeChild(modal);
-                    if (primaryAction) primaryAction();
+                    primaryAction?.();
                 });
-
+    
                 if (secondaryBtnText) {
                     modal.querySelector('#secondary-action').addEventListener('click', () => {
                         document.body.removeChild(modal);
-                        if (secondaryAction) secondaryAction();
+                        secondaryAction?.();
                     });
                 }
-
+    
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) document.body.removeChild(modal);
                 });
             }
-
+    
+            // Funciones de almacenamiento
             function saveZone(name, radius) {
                 const savedZones = JSON.parse(localStorage.getItem('vitorapp_zones')) || [];
                 const newZone = {
@@ -767,10 +894,10 @@
                 localStorage.setItem('vitorapp_zones', JSON.stringify(savedZones));
                 return newZone;
             }
-
+    
             function loadSavedZones() {
                 const savedZones = JSON.parse(localStorage.getItem('vitorapp_zones')) || [];
-                zonesList.innerHTML = savedZones.length === 0 
+                elements.zonesList.innerHTML = savedZones.length === 0 
                     ? '<p style="text-align: center; color: #666;">No tienes zonas seguras guardadas.</p>'
                     : savedZones.map(zone => `
                         <div class="zone-item">
@@ -785,10 +912,10 @@
                         </div>
                     `).join('');
             }
-
+    
             function loadDevices() {
                 const devices = JSON.parse(localStorage.getItem('vitorapp_devices')) || [];
-                deviceList.innerHTML = devices.map(device => `
+                elements.deviceList.innerHTML = devices.map(device => `
                     <div class="device-item">
                         <div class="device-icon">
                             <i class="fas ${getDeviceIcon(device.type)}"></i>
@@ -802,7 +929,7 @@
                     </div>
                 `).join('');
             }
-
+    
             function getDeviceIcon(type) {
                 const icons = {
                     mobile: 'fa-mobile-alt',
@@ -812,9 +939,6 @@
                 };
                 return icons[type] || 'fa-question-circle';
             }
-
-            // Resto de funcionalidad para dispositivos...
-            // (Mantener la lógica existente para añadir dispositivos y generar códigos)
         });
     </script>
 </body>
