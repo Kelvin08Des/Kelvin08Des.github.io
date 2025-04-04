@@ -422,6 +422,12 @@
             color: #666;
             margin-top: 4px;
         }
+
+        /* Animación de carga */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -476,7 +482,20 @@
         </div>
 
         <div id="device-screen" class="screen">
-            <h2 style="margin-bottom: 20px;">Dispositivos Vinculados</h2>
+            <h2 style="margin-bottom: 20px;">Vincular Dispositivo</h2>
+            <div id="linking-section">
+                <p>Presiona el botón para generar un código de vinculación:</p>
+                <button class="add-device-btn" id="generate-link-code">Generar Código</button>
+                <div id="linking-status" style="margin-top: 20px; text-align: center; display: none;">
+                    <div class="loading-spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 0 auto 10px;"></div>
+                    <p>Cargando...</p>
+                </div>
+                <div id="link-code-display" style="margin-top: 20px; text-align: center; font-size: 24px; font-weight: bold; display: none;">
+                    <p>Ingrese este código en el dispositivo del tutor:</p>
+                    <span id="generated-code"></span>
+                </div>
+            </div>
+            <h2 style="margin-top: 30px; margin-bottom: 20px;">Dispositivos Vinculados</h2>
             <div class="device-list" id="device-list">
                 <div class="device-item">
                     <div class="device-icon">
@@ -497,7 +516,7 @@
                     </div>
                 </div>
             </div>
-            <button class="add-device-btn" id="add-device-btn">Añadir Dispositivo</button>
+            <button class="add-device-btn" id="add-device-btn">Añadir Dispositivo Manualmente</button>
         </div>
 
         <div id="safe-zone-screen" class="screen">
@@ -524,7 +543,7 @@
         <div id="saved-zones-screen" class="screen">
             <h2 style="margin-bottom: 20px;">Mis Zonas Seguras</h2>
             <div class="zones-list" id="zones-list">
-                </div>
+            </div>
         </div>
 
         <div class="nav-bar">
@@ -598,6 +617,10 @@
             const confirmDevice = document.getElementById('confirm-device');
             const deviceList = document.getElementById('device-list');
             const zonesList = document.getElementById('zones-list');
+            const generateLinkCodeBtn = document.getElementById('generate-link-code');
+            const linkingStatusDiv = document.getElementById('linking-status');
+            const linkCodeDisplayDiv = document.getElementById('link-code-display');
+            const generatedCodeSpan = document.getElementById('generated-code');
 
             // Ocultar mensaje de error de zona inicialmente
             zoneError.style.display = 'none';
@@ -641,6 +664,9 @@
                 } else if (screenId === 'device-screen') {
                     headerTitle.textContent = 'Vincular Dispositivos';
                     backBtn.style.display = 'block';
+                    // Ocultar código y estado al entrar a la pantalla
+                    linkingStatusDiv.style.display = 'none';
+                    linkCodeDisplayDiv.style.display = 'none';
                 } else if (screenId === 'safe-zone-screen') {
                     headerTitle.textContent = 'Crear Zona Segura';
                     backBtn.style.display = 'block';
@@ -772,18 +798,18 @@
                 modal.innerHTML = `
                     <div class="modal-content">
                         <div class="modal-header">
-                            <div class="modal-title">${title}</div>
-                            <button class="close-modal">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div style="text-align: center; margin: 15px 0;">
-                                <i class="fas fa-check-circle success-icon" style="color: #4CAF50; font-size: 48px; margin-bottom: 15px;"></i>
-                                <p>${message}</p>
+                            <div class="modal-title"><span class="math-inline">\{title\}</div\>
+<button class\="close\-modal"\>&times;</button\>
+</div\>
+<div class\="modal\-body"\>
+<div style\="text\-align\: center; margin\: 15px 0;"\>
+<i class\="fas fa\-check\-circle success\-icon" style\="color\: \#4CAF50; font\-size\: 48px; margin\-bottom\: 15px;"\></i\>
+<p\></span>{message}</p>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            ${secondaryButton}
-                            <button class="modal-btn modal-btn-primary" id="primary-action">${primaryBtnText}</button>
+                            <span class="math-inline">\{secondaryButton\}
+<button class\="modal\-btn modal\-btn\-primary" id\="primary\-action"\></span>{primaryBtnText}</button>
                         </div>
                     </div>
                 `;
@@ -898,6 +924,7 @@
 
                 let iconClass = 'fa-mobile-alt';
                 if (deviceType === 'tablet') iconClass = 'fa-tablet-alt';
+              
                 if (deviceType === 'watch') iconClass = 'fa-clock';
                 if (deviceType === 'other') iconClass = 'fa-laptop';
 
@@ -923,6 +950,26 @@
                     statusElement.textContent = 'Conectado';
                     statusElement.style.color = '#4caf50';
                 }, 2000);
+            });
+
+            // Event Listener para el botón "Generar Código"
+            generateLinkCodeBtn.addEventListener('click', function() {
+                // Mostrar el estado de carga
+                linkingStatusDiv.style.display = 'block';
+                linkCodeDisplayDiv.style.display = 'none';
+
+                // Generar código aleatorio (ejemplo de 6 dígitos)
+                const code = Math.floor(100000 + Math.random() * 900000);
+                console.log("Código generado:", code); // Para depuración
+
+                // Esperar 5 segundos
+                setTimeout(function() {
+                    // Ocultar el estado de carga
+                    linkingStatusDiv.style.display = 'none';
+                    // Mostrar el código generado
+                    generatedCodeSpan.textContent = code;
+                    linkCodeDisplayDiv.style.display = 'block';
+                }, 5000);
             });
 
             // Inicialización
