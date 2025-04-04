@@ -268,43 +268,6 @@
             margin-bottom: 5px;
         }
 
-        /* Added for map simulation */
-        .map-circle {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background-color: rgba(66, 133, 244, 0.3);
-            border: 2px solid #4285f4;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.3s, height 0.3s;
-        }
-
-        .map-marker {
-            width: 20px;
-            height: 20px;
-            background-color: #4285f4;
-            border-radius: 50%;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1;
-        }
-
-        .map-marker:after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 8px;
-            border-style: solid;
-            border-color: #4285f4 transparent transparent transparent;
-        }
-
         /* Modal styles */
         .modal {
             display: none;
@@ -376,7 +339,7 @@
         /* Success Modal Animation */
         @keyframes fadeInScale {
             0% { opacity: 0; transform: scale(0.5); }
-            100% { opacity: 1; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1 ); }
         }
 
         .success-icon {
@@ -490,7 +453,7 @@
                     <div class="loading-spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 0 auto 10px;"></div>
                     <p>Cargando...</p>
                 </div>
-                <div id="link-code-display" style="margin-top: 20px; text-align: center; font-size: 24px; font-weight: bold; display: none;">
+                <div id="link-code-display" style="margin-top: 20px ; text-align: center; font-size: 24px; font-weight: bold; display: none;">
                     <p>Ingrese este código en el dispositivo del tutor:</p>
                     <span id="generated-code"></span>
                 </div>
@@ -583,7 +546,7 @@
                 <div class="input-group">
                     <select id="device-type" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
                         <option value="">Seleccionar tipo</option>
-                        <option value="mobile">Teléfono móvil</option>
+                        <option value="mobile">Tel éfono móvil</option>
                         <option value="tablet">Tablet</option>
                         <option value="watch">Reloj inteligente</option>
                         <option value="other">Otro</option>
@@ -599,7 +562,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Variables
-            const adminUser = "admin";
+            const adminUser  = "admin";
             const adminPass = "admin";
             const MIN_RADIUS = 50; // Radio mínimo en metros
 
@@ -716,7 +679,7 @@
                 const password = document.getElementById('password').value;
                 const errorMsg = document.getElementById('login-error');
 
-                if (username === adminUser && password === adminPass) {
+                if (username === adminUser  && password === adminPass) {
                     showConfirmationModal(
                         'Inicio de Sesión Exitoso',
                         'Bienvenido, administrador. Has iniciado sesión correctamente.',
@@ -805,25 +768,23 @@
                 modal.innerHTML = `
                     <div class="modal-content">
                         <div class="modal-header">
-                            <div class="modal-title"><span class="math-inline">\{title\}</div\>
-<button class\="close\-modal"\>&times;</button\>
-</div\>
-<div class\="modal\-body"\>
-<div style\="text\-align\: center; margin\: 15px 0;"\>
-<i class\="fas fa\-check\-circle success\-icon" style\="color\: \#4CAF50; font\-size\: 48px; margin\-bottom\: 15px;"\></i\>
-<p\></span>{message}</p>
+                            <div class="modal-title">${title}</div>
+                            <button class="close-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="text-align: center; margin: 15px 0;">
+                                <i class="fas fa-check-circle success-icon" style="color: #4CAF50; font-size: 48px; margin-bottom: 15px;"></i>
+                                <p>${message}</p>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <span class="math-inline">\{secondaryButton\}
-<button class\="modal\-btn modal\-btn\-primary" id\="primary\-action"\></span>{primaryBtnText}</button>
+                            ${secondaryButton}
+                            <button class="modal-btn modal-btn-primary" id="primary-action">${primaryBtnText}</button>
                         </div>
                     </div>
                 `;
 
-                document.body.appendChild(modal);
-
-                // Agregar event listeners
+                document.body.appendChild(modal // Agregar event listeners
                 modal.querySelector('.close-modal').addEventListener('click', function() {
                     document.body.removeChild(modal);
                 });
@@ -916,170 +877,112 @@
             closeModal.addEventListener('click', closeAddDeviceModal);
             cancelDevice.addEventListener('click', closeAddDeviceModal);
 
-confirmDevice.addEventListener('click', function() {
-    const deviceName = document.getElementById('device-name').value;
-    const deviceType = document.getElementById('device-type').value;
+            confirmDevice.addEventListener('click', function() {
+                const deviceName = document.getElementById('device-name').value;
+                const deviceType = document.getElementById('device-type').value;
 
-    if (!deviceName || !deviceType) {
-        alert('Por favor, completa todos los campos.');
-        return;
-    }
-
-    // Crear nuevo elemento de dispositivo
-    const newDevice = document.createElement('div');
-    newDevice.className = 'device-item';
-
-    let iconClass = 'fa-mobile-alt';
-    if (deviceType === 'tablet') iconClass = 'fa-tablet-alt';
-    if (deviceType === 'watch') iconClass = 'fa-clock';
-    if (deviceType === 'other') iconClass = 'fa-laptop';
-
-    newDevice.innerHTML = `
-        <div class="device-icon">
-            <i class="fas ${iconClass}"></i>
-        </div>
-        <div class="device-info">
-            <div class="device-name">${deviceName}</div>
-            <div class="device-status">Conectando...</div>
-        </div>
-    `;
-
-    // Añadir a la lista
-    deviceList.appendChild(newDevice);
-
-    // Cerrar el modal
-    closeAddDeviceModal();
-
-    // Simular conexión después de 2 segundos
-    setTimeout(() => {
-        const statusElement = newDevice.querySelector('.device-status');
-        statusElement.textContent = 'Conectado';
-        statusElement.style.color = '#4caf50';
-    }, 2000);
-});
-
-// Event Listener para el botón "Ingresar Código"
-enterLinkCodeBtn.addEventListener('click', function() {
-    const enteredCode = manualCodeInput.value;
-    if (enteredCode) {
-        console.log("Código ingresado:", enteredCode);
-        // Simulación de vinculación exitosa
-        showConfirmationModal(
-            'Dispositivo Vinculado',
-            `El dispositivo con código "${enteredCode}" se ha vinculado correctamente.`,
-            'Aceptar',
-            null,
-            function() {
-                // Aquí podrías agregar la lógica para mostrar el nuevo dispositivo en la lista
-                const newDeviceName = prompt("Ingrese el nombre del dispositivo vinculado:");
-                if (newDeviceName) {
-                    addDeviceToList(newDeviceName, 'Código Ingresado');
+                if (!deviceName || !deviceType) {
+                    alert('Por favor, completa todos los campos.');
+                    return;
                 }
-                manualCodeInput.value = ''; // Limpiar el campo después de intentar
+
+                // Crear nuevo elemento de dispositivo
+                const newDevice = document.createElement('div');
+                newDevice.className = 'device-item';
+
+                let iconClass = 'fa-mobile-alt';
+                if (deviceType === 'tablet') iconClass = 'fa-tablet-alt';
+                if (deviceType === 'watch') iconClass = 'fa-clock';
+                if (deviceType === 'other') iconClass = 'fa-laptop';
+
+                newDevice.innerHTML = `
+                    <div class="device-icon">
+                        <i class="fas ${iconClass}"></i>
+                    </div>
+                    <div class="device-info">
+                        <div class="device-name">${deviceName}</div>
+                        <div class="device-status">Conectando...</div>
+                    </div>
+                `;
+
+                // Añadir a la lista
+                deviceList.appendChild(newDevice);
+
+                // Cerrar el modal
+                closeAddDeviceModal();
+
+                // Simular conexión después de 2 segundos
+                setTimeout(() => {
+                    const statusElement = newDevice.querySelector('.device-status');
+                    statusElement.textContent = 'Conectado';
+                    statusElement.style.color = '#4caf50';
+                }, 2000);
+            });
+
+            // Event Listener para el botón "Ingresar Código"
+            enterLinkCodeBtn.addEventListener('click', function() {
+                const enteredCode = manualCodeInput.value;
+                if (enteredCode) {
+                    console.log("Código ingresado:", enteredCode);
+                    // Simulación de vinculación exitosa
+                    showConfirmationModal(
+                        'Dispositivo Vinculado',
+                        `El dispositivo con código "${enteredCode}" se ha vinculado correctamente.`,
+                        'Aceptar',
+                        null,
+                        function() {
+                            // Aquí podrías agregar la lógica para mostrar el nuevo dispositivo en la lista
+                            const newDeviceName = prompt("Ingrese el nombre del dispositivo vinculado:");
+                            if (newDeviceName) {
+                                addDeviceToList(newDeviceName, 'Código Ingresado');
+                            }
+                            manualCodeInput.value = ''; // Limpiar el campo después de intentar
+                        }
+                    );
+                } else {
+                    alert("Por favor, ingrese un código.");
+                }
+            });
+
+            // Event Listener para el botón "Generar Código"
+            generateLinkCodeBtn.addEventListener('click', function() {
+                // Mostrar el estado de carga
+                linkingStatusDiv.style.display = 'block';
+                linkCodeDisplayDiv.style.display = 'none';
+
+                // Generar código aleatorio (ejemplo de 6 dígitos)
+                const code = Math.floor(100000 + Math.random() * 900000);
+                console.log("Código generado:", code); // Para depuración
+
+                // Esperar 5 segundos
+                setTimeout(function() {
+                    // Ocultar el estado de carga
+                    linkingStatusDiv.style.display = 'none';
+                    // Mostrar el código generado
+                    generatedCodeSpan.textContent = code;
+                    linkCodeDisplayDiv.style.display = 'block';
+                }, 5000);
+            });
+
+            // Función para añadir un dispositivo a la lista visualmente
+            function addDeviceToList(deviceName, connectionMethod) {
+                const newDevice = document.createElement('div');
+                newDevice.className = 'device-item';
+                newDevice.innerHTML = `
+                    <div class="device-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="device-info">
+                        <div class="device-name">${deviceName}</div>
+                        <div class="device-status">Conectado (${connectionMethod})</div>
+                    </div>
+                `;
+                deviceList.appendChild(newDevice);
             }
-        );
-    } else {
-        alert("Por favor, ingrese un código.");
-    }
-});
 
-// Event Listener para el botón "Generar Código"
-generateLinkCodeBtn.addEventListener('click', function() {
-    // Mostrar el estado de carga
-    linkingStatusDiv.style.display = 'block';
-    linkCodeDisplayDiv.style.display = 'none';
-
-    // Generar código aleatorio (ejemplo de 6 dígitos)
-    const code = Math.floor(100000 + Math.random() * 900000);
-    console.log("Código generado:", code); // Para depuración
-
-    // Esperar 5 segundos
-    setTimeout(function() {
-        // Ocultar el estado de carga
-        linkingStatusDiv.style.display = 'none';
-        // Mostrar el código generado
-        generatedCodeSpan.textContent = code;
-        linkCodeDisplayDiv.style.display = 'block';
-    }, 5000);
-});
-
-// Función para añadir un dispositivo a la lista visualmente
-function addDeviceToList(deviceName, connectionMethod) {
-    const newDevice = document.createElement('div');
-    newDevice.className = 'device-item';
-    newDevice.innerHTML = `
-        <div class="device-icon">
-            <i class="fas fa-question-circle"></i>
-        </div>
-        <div class="device-info">
-            <div class="device-name">${deviceName}</div>
-            <div class="device-status">Conectado (${connectionMethod})</div>
-        </div>
-    `;
-    deviceList.appendChild(newDevice);
-}
-
-// Inicialización
-showScreen('main-menu');
-});
-
-// Función para crear y mostrar modal de confirmación personalizado
-function showConfirmationModal(title, message, primaryBtnText, secondaryBtnText, primaryAction, secondaryAction) {
-// Crear el modal dinámicamente
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.style.display = 'flex';
-
-let secondaryButton = '';
-if (secondaryBtnText) {
-    secondaryButton = `<button class="modal-btn modal-btn-secondary" id="secondary-action">${secondaryBtnText}</button>`;
-}
-
-modal.innerHTML = `
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">${title}</div>
-            <button class="close-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div style="text-align: center; margin: 15px 0;">
-                <i class="fas fa-check-circle success-icon" style="color: #4CAF50; font-size: 48px; margin-bottom: 15px;"></i>
-                <p>${message}</p>
-            </div>
-        </div>
-        <div class="modal-footer">
-            ${secondaryButton}
-            <button class="modal-btn modal-btn-primary" id="primary-action">${primaryBtnText}</button>
-        </div>
-    </div>
-`;
-
-document.body.appendChild(modal);
-
-// Agregar event listeners
-modal.querySelector('.close-modal').addEventListener('click', function() {
-    document.body.removeChild(modal);
-});
-
-modal.querySelector('#primary-action').addEventListener('click', function() {
-    document.body.removeChild(modal);
-    if (primaryAction) primaryAction();
-});
-
-if (secondaryBtnText) {
-    modal.querySelector('#secondary-action').addEventListener('click', function() {
-        document.body.removeChild(modal);
-        if (secondaryAction) secondaryAction();
-    });
-}
-
-// Cerrar modal al hacer clic fuera
-modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-        document.body.removeChild(modal);
-    }
-});
-}
-</script>
+            // Inicialización
+            showScreen('main-menu');
+        });
+    </script>
 </body>
 </html>
