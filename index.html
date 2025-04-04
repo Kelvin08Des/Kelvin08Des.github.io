@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VitorApp Móvil</title>
+    <title>VitorApp</title>
     <style>
         * {
             margin: 0;
@@ -346,13 +346,6 @@
             cursor: pointer;
         }
 
-        .close-modal-confirmation {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
         .modal-body {
             margin-bottom: 15px;
         }
@@ -378,6 +371,56 @@
         .modal-btn-secondary {
             background-color: #f5f5f5;
             color: #333;
+        }
+
+        /* Success Modal Animation */
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .success-icon {
+            animation: fadeInScale 0.5s ease-out;
+        }
+
+        /* Estilo para pantalla de zonas guardadas */
+        .zones-list {
+            margin-top: 20px;
+        }
+
+        .zone-item {
+            display: flex;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .zone-icon {
+            background-color: rgba(66, 133, 244, 0.2);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 20px;
+            color: #4285f4;
+        }
+
+        .zone-info {
+            flex-grow: 1;
+        }
+
+        .zone-name {
+            font-weight: bold;
+        }
+
+        .zone-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -407,6 +450,12 @@
                 <i class="fas fa-map-marker-alt"></i>
                 <div class="option-title">Crear Zona Segura</div>
                 <div class="option-desc">Establece áreas de seguridad en el mapa</div>
+            </div>
+
+            <div class="menu-option" id="saved-zones-option">
+                <i class="fas fa-list"></i>
+                <div class="option-title">Mis Zonas Seguras</div>
+                <div class="option-desc">Ver todas mis zonas guardadas</div>
             </div>
         </div>
 
@@ -453,6 +502,9 @@
 
         <div id="safe-zone-screen" class="screen">
             <h2 style="margin-bottom: 20px;">Crear Zona Segura</h2>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <input type="text" id="zone-name" placeholder="Nombre de la zona (opcional)">
+            </div>
             <div id="map">
                 <div class="map-placeholder">
                     <div class="map-marker"></div>
@@ -467,6 +519,12 @@
                 Error: El radio debe ser de al menos 50 metros para ser efectivo.
             </div>
             <button class="save-zone-btn" id="save-zone-btn">Guardar Zona Segura</button>
+        </div>
+
+        <div id="saved-zones-screen" class="screen">
+            <h2 style="margin-bottom: 20px;">Mis Zonas Seguras</h2>
+            <div class="zones-list" id="zones-list">
+                </div>
         </div>
 
         <div class="nav-bar">
@@ -495,4 +553,381 @@
                 <div class="modal-title">Añadir Nuevo Dispositivo</div>
                 <button class="close-modal">&times;</button>
             </div>
-            <div
+            <div class="modal-body">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <input type="text" id="device-name" placeholder="Nombre del dispositivo">
+                </div>
+                <div class="input-group">
+                    <select id="device-type" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+                        <option value="">Seleccionar tipo</option>
+                        <option value="mobile">Teléfono móvil</option>
+                        <option value="tablet">Tablet</option>
+                        <option value="watch">Reloj inteligente</option>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" id="cancel-device">Cancelar</button>
+                <button class="modal-btn modal-btn-primary" id="confirm-device">Añadir</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variables
+            const adminUser = "admin";
+            const adminPass = "admin";
+            const MIN_RADIUS = 50; // Radio mínimo en metros
+
+            // Elementos DOM
+            const backBtn = document.querySelector('.back-btn');
+            const screens = document.querySelectorAll('.screen');
+            const navItems = document.querySelectorAll('.nav-item');
+            const menuOptions = document.querySelectorAll('.menu-option');
+            const loginBtn = document.getElementById('login-btn');
+            const radiusInput = document.getElementById('radius-input');
+            const radiusValue = document.getElementById('radius-value');
+            const radiusCircle = document.getElementById('radius-circle');
+            const saveZoneBtn = document.getElementById('save-zone-btn');
+            const zoneError = document.getElementById('zone-error');
+            const addDeviceBtn = document.getElementById('add-device-btn');
+            const addDeviceModal = document.getElementById('add-device-modal');
+            const closeModal = document.querySelector('.close-modal');
+            const cancelDevice = document.getElementById('cancel-device');
+            const confirmDevice = document.getElementById('confirm-device');
+            const deviceList = document.getElementById('device-list');
+            const zonesList = document.getElementById('zones-list');
+
+            // Ocultar mensaje de error de zona inicialmente
+            zoneError.style.display = 'none';
+
+            // Función para cambiar de pantalla
+            function showScreen(screenId) {
+                screens.forEach(screen => {
+                    screen.classList.remove('active');
+                });
+
+                document.getElementById(screenId).classList.add('active');
+
+                // Actualizar título de la cabecera y botón de retroceso
+                updateHeader(screenId);
+
+                // Actualizar navegación
+                navItems.forEach(item => {
+                    if (item.dataset.screen === screenId) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+
+                // Cargar datos específicos según la pantalla
+                if (screenId === 'saved-zones-screen') {
+                    loadSavedZones();
+                }
+            }
+
+            // Actualizar cabecera según la pantalla
+            function updateHeader(screenId) {
+                const headerTitle = document.querySelector('.header-title');
+
+                if (screenId === 'main-menu') {
+                    headerTitle.textContent = 'VitorApp';
+                    backBtn.style.display = 'none';
+                } else if (screenId === 'login-screen') {
+                    headerTitle.textContent = 'Inicio de Sesión';
+                    backBtn.style.display = 'block';
+                } else if (screenId === 'device-screen') {
+                    headerTitle.textContent = 'Vincular Dispositivos';
+                    backBtn.style.display = 'block';
+                } else if (screenId === 'safe-zone-screen') {
+                    headerTitle.textContent = 'Crear Zona Segura';
+                    backBtn.style.display = 'block';
+                } else if (screenId === 'saved-zones-screen') {
+                    headerTitle.textContent = 'Mis Zonas Seguras';
+                    backBtn.style.display = 'block';
+                }
+            }
+
+            // Event Listeners para opciones del menú principal
+            menuOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    if (this.id === 'login-option') {
+                        showScreen('login-screen');
+                    } else if (this.id === 'device-option') {
+                        showScreen('device-screen');
+                    } else if (this.id === 'safe-zone-option') {
+                        showScreen('safe-zone-screen');
+                    } else if (this.id === 'saved-zones-option') {
+                        showScreen('saved-zones-screen');
+                    }
+                });
+            });
+
+            // Event Listener para botón de retroceso
+            backBtn.addEventListener('click', function() {
+                showScreen('main-menu');
+            });
+
+            // Event Listeners para items de navegación
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    showScreen(this.dataset.screen);
+                });
+            });
+
+            // Event Listener para inicio de sesión
+            loginBtn.addEventListener('click', function() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const errorMsg = document.getElementById('login-error');
+
+                if (username === adminUser && password === adminPass) {
+                    showConfirmationModal(
+                        'Inicio de Sesión Exitoso',
+                        'Bienvenido, administrador. Has iniciado sesión correctamente.',
+                        'Continuar',
+                        null,
+                        function() {
+                            document.getElementById('username').value = '';
+                            document.getElementById('password').value = '';
+                            errorMsg.style.display = 'none';
+                            showScreen('main-menu');
+                        }
+                    );
+                } else {
+                    errorMsg.style.display = 'block';
+                }
+            });
+
+            // Event Listener para control de radio en el mapa
+            radiusInput.addEventListener('input', function() {
+                const value = this.value;
+                radiusValue.textContent = value;
+
+                // Ocultar mensaje de error si es mayor que el mínimo
+                if (parseInt(value) >= MIN_RADIUS) {
+                    zoneError.style.display = 'none';
+                }
+
+                // Actualizar el círculo en el mapa (simulación)
+                const size = value * 0.8; // Para visualización
+                radiusCircle.style.width = size + 'px';
+                radiusCircle.style.height = size + 'px';
+            });
+
+            // Event Listener para guardar zona segura
+            saveZoneBtn.addEventListener('click', function() {
+                const radius = parseInt(radiusInput.value);
+                const zoneName = document.getElementById('zone-name').value || `Zona ${new Date().toLocaleDateString()}`;
+
+                if (radius < MIN_RADIUS) {
+                    // Mostrar error si el radio es menor al mínimo
+                    zoneError.style.display = 'block';
+                } else {
+                    // Guardar zona segura
+                    saveZone(zoneName, radius);
+
+                    // Crear y mostrar el modal de confirmación personalizado
+                    showConfirmationModal(
+                        'Zona Segura Guardada',
+                        `Tu zona segura "${zoneName}" ha sido guardada con éxito con un radio de ${radius} metros.`,
+                        'Volver al menú',
+                        'Ver mis zonas',
+                        function() {
+                            // Resetear campos
+                            document.getElementById('zone-name').value = '';
+                            radiusInput.value = 50;
+                            radiusValue.textContent = 50;
+                            radiusCircle.style.width = '40px';
+                            radiusCircle.style.height = '40px';
+                            showScreen('main-menu');
+                        },
+                        function() {
+                            // Resetear campos
+                            document.getElementById('zone-name').value = '';
+                            radiusInput.value = 50;
+                            radiusValue.textContent = 50;
+                            radiusCircle.style.width = '40px';
+                            radiusCircle.style.height = '40px';
+                            showScreen('saved-zones-screen');
+                        }
+                    );
+                }
+            });
+
+            // Función para crear y mostrar modal de confirmación personalizado
+            function showConfirmationModal(title, message, primaryBtnText, secondaryBtnText, primaryAction, secondaryAction) {
+                // Crear el modal dinámicamente
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.display = 'flex';
+
+                let secondaryButton = '';
+                if (secondaryBtnText) {
+                    secondaryButton = `<button class="modal-btn modal-btn-secondary" id="secondary-action">${secondaryBtnText}</button>`;
+                }
+
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="modal-title">${title}</div>
+                            <button class="close-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="text-align: center; margin: 15px 0;">
+                                <i class="fas fa-check-circle success-icon" style="color: #4CAF50; font-size: 48px; margin-bottom: 15px;"></i>
+                                <p>${message}</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            ${secondaryButton}
+                            <button class="modal-btn modal-btn-primary" id="primary-action">${primaryBtnText}</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Agregar event listeners
+                modal.querySelector('.close-modal').addEventListener('click', function() {
+                    document.body.removeChild(modal);
+                });
+
+                modal.querySelector('#primary-action').addEventListener('click', function() {
+                    document.body.removeChild(modal);
+                    if (primaryAction) primaryAction();
+                });
+
+                if (secondaryBtnText) {
+                    modal.querySelector('#secondary-action').addEventListener('click', function() {
+                        document.body.removeChild(modal);
+                        if (secondaryAction) secondaryAction();
+                    });
+                }
+
+                // Cerrar modal al hacer clic fuera
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        document.body.removeChild(modal);
+                    }
+                });
+            }
+
+            // Función para guardar zona en localStorage
+            function saveZone(name, radius) {
+                // Obtener zonas existentes o inicializar array vacío
+                let savedZones = JSON.parse(localStorage.getItem('vitorapp_zones')) || [];
+
+                // Crear nueva zona
+                const newZone = {
+                    id: Date.now(),
+                    name: name,
+                    radius: radius,
+                    latitude: Math.random() * 0.1 + 40.4, // Simulación de coordenadas
+                    longitude: Math.random() * 0.1 - 3.7,
+                    createdAt: new Date().toISOString()
+                };
+
+                // Añadir a la lista y guardar
+                savedZones.push(newZone);
+                localStorage.setItem('vitorapp_zones', JSON.stringify(savedZones));
+
+                return newZone;
+            }
+
+            // Función para cargar zonas guardadas
+            function loadSavedZones() {
+                const savedZones = JSON.parse(localStorage.getItem('vitorapp_zones')) || [];
+                zonesList.innerHTML = '';
+
+                if (savedZones.length === 0) {
+                    zonesList.innerHTML = '<p style="text-align: center; color: #666;">No tienes zonas seguras guardadas.</p>';
+                    return;
+                }
+
+                savedZones.forEach(zone => {
+                    const zoneItem = document.createElement('div');
+                    zoneItem.className = 'zone-item';
+
+                    const createdDate = new Date(zone.createdAt);
+                    const formattedDate = createdDate.toLocaleDateString() + ' ' + createdDate.toLocaleTimeString();
+
+                    zoneItem.innerHTML = `
+                        <div class="zone-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="zone-info">
+                            <div class="zone-name">${zone.name}</div>
+                            <div class="zone-details">Radio: ${zone.radius} metros</div>
+                            <div class="zone-details">Guardada: ${formattedDate}</div>
+                        </div>
+                    `;
+                    zonesList.appendChild(zoneItem);
+                });
+            }
+
+            // Funcionalidad para añadir dispositivo
+            function openAddDeviceModal() {
+                addDeviceModal.style.display = 'flex';
+            }
+
+            function closeAddDeviceModal() {
+                addDeviceModal.style.display = 'none';
+                document.getElementById('device-name').value = '';
+                document.getElementById('device-type').value = '';
+            }
+
+            addDeviceBtn.addEventListener('click', openAddDeviceModal);
+            closeModal.addEventListener('click', closeAddDeviceModal);
+            cancelDevice.addEventListener('click', closeAddDeviceModal);
+
+            confirmDevice.addEventListener('click', function() {
+                const deviceName = document.getElementById('device-name').value;
+                const deviceType = document.getElementById('device-type').value;
+
+                if (!deviceName || !deviceType) {
+                    alert('Por favor, completa todos los campos.');
+                    return;
+                }
+
+                // Crear nuevo elemento de dispositivo
+                const newDevice = document.createElement('div');
+                newDevice.className = 'device-item';
+
+                let iconClass = 'fa-mobile-alt';
+                if (deviceType === 'tablet') iconClass = 'fa-tablet-alt';
+                if (deviceType === 'watch') iconClass = 'fa-clock';
+                if (deviceType === 'other') iconClass = 'fa-laptop';
+
+                newDevice.innerHTML = `
+                    <div class="device-icon">
+                        <i class="fas ${iconClass}"></i>
+                    </div>
+                    <div class="device-info">
+                        <div class="device-name">${deviceName}</div>
+                        <div class="device-status">Conectando...</div>
+                    </div>
+                `;
+
+                // Añadir a la lista
+                deviceList.appendChild(newDevice);
+
+                // Cerrar el modal
+                closeAddDeviceModal();
+
+                // Simular conexión después de 2 segundos
+                setTimeout(() => {
+                    const statusElement = newDevice.querySelector('.device-status');
+                    statusElement.textContent = 'Conectado';
+                    statusElement.style.color = '#4caf50';
+                }, 2000);
+            });
+
+            // Inicialización
+            showScreen('main-menu');
+        });
+    </script>
+</body>
+</html>
