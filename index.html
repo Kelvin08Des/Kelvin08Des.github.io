@@ -915,6 +915,7 @@
             addDeviceBtn.addEventListener('click', openAddDeviceModal);
             closeModal.addEventListener('click', closeAddDeviceModal);
             cancelDevice.addEventListener('click', closeAddDeviceModal);
+            
 
 confirmDevice.addEventListener('click', function() {
     const deviceName = document.getElementById('device-name').value;
@@ -983,18 +984,103 @@ enterLinkCodeBtn.addEventListener('click', function() {
     const enteredCode = manualCodeInput.value;
     if (enteredCode) {
         console.log("Código ingresado:", enteredCode);
-        // Aquí podrías agregar la lógica para verificar el código
-        // y vincular el dispositivo. Por ahora, mostraremos un mensaje.
-        alert(`Se intentó vincular con el código: ${enteredCode}`);
-        manualCodeInput.value = ''; // Limpiar el campo después de intentar
+        // Simulación de vinculación exitosa
+        showConfirmationModal(
+            'Dispositivo Vinculado',
+            `El dispositivo con código "${enteredCode}" se ha vinculado correctamente.`,
+            'Aceptar',
+            null,
+            function() {
+                // Aquí podrías agregar la lógica para mostrar el nuevo dispositivo en la lista
+                const newDeviceName = prompt("Ingrese el nombre del dispositivo vinculado:");
+                if (newDeviceName) {
+                    addDeviceToList(newDeviceName, 'Código Ingresado');
+                }
+                manualCodeInput.value = ''; // Limpiar el campo después de intentar
+            }
+        );
     } else {
         alert("Por favor, ingrese un código.");
     }
 });
 
+// Función para añadir un dispositivo a la lista visualmente
+function addDeviceToList(deviceName, connectionMethod) {
+    const newDevice = document.createElement('div');
+    newDevice.className = 'device-item';
+    newDevice.innerHTML = `
+        <div class="device-icon">
+            <i class="fas fa-question-circle"></i>
+        </div>
+        <div class="device-info">
+            <div class="device-name">${deviceName}</div>
+            <div class="device-status">Conectado (${connectionMethod})</div>
+        </div>
+    `;
+    deviceList.appendChild(newDevice);
+}
+
 // Inicialización
 showScreen('main-menu');
 });
+
+// Función para crear y mostrar modal de confirmación personalizado
+function showConfirmationModal(title, message, primaryBtnText, secondaryBtnText, primaryAction, secondaryAction) {
+// Crear el modal dinámicamente
+const modal = document.createElement('div');
+modal.className = 'modal';
+modal.style.display = 'flex';
+
+let secondaryButton = '';
+if (secondaryBtnText) {
+    secondaryButton = `<button class="modal-btn modal-btn-secondary" id="secondary-action">${secondaryBtnText}</button>`;
+}
+
+modal.innerHTML = `
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">${title}</div>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="text-align: center; margin: 15px 0;">
+                <i class="fas fa-check-circle success-icon" style="color: #4CAF50; font-size: 48px; margin-bottom: 15px;"></i>
+                <p>${message}</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            ${secondaryButton}
+            <button class="modal-btn modal-btn-primary" id="primary-action">${primaryBtnText}</button>
+        </div>
+    </div>
+`;
+
+document.body.appendChild(modal);
+
+// Agregar event listeners
+modal.querySelector('.close-modal').addEventListener('click', function() {
+    document.body.removeChild(modal);
+});
+
+modal.querySelector('#primary-action').addEventListener('click', function() {
+    document.body.removeChild(modal);
+    if (primaryAction) primaryAction();
+});
+
+if (secondaryBtnText) {
+    modal.querySelector('#secondary-action').addEventListener('click', function() {
+        document.body.removeChild(modal);
+        if (secondaryAction) secondaryAction();
+    });
+}
+
+// Cerrar modal al hacer clic fuera
+modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+        document.body.removeChild(modal);
+    }
+});
+}
 </script>
 </body>
 </html>
